@@ -27,6 +27,9 @@ const (
 
 	obstacleW = 16
 	obstacleH = 28
+
+	baseScrollSpeed = 4.0
+	maxScrollSpeed  = 11.0
 )
 
 type gameState int
@@ -73,12 +76,26 @@ func (g *Game) reset() {
 	g.onGround = true
 	g.obstacles = g.obstacles[:0]
 	g.spawnTimer = g.nextSpawnFrames()
-	g.scrollSpeed = 4
+	g.scrollSpeed = baseScrollSpeed
 	g.score = 0
 }
 
 func (g *Game) nextSpawnFrames() int {
-	return 50 + g.rng.Intn(70)
+	// スピードが上がるほど障害物間の距離（ピクセル）を広げる。
+	// これにより高速でも「先に押しておけば避けられる」余地を残す。
+	speedDelta := g.scrollSpeed - baseScrollSpeed
+	minGapPx := 180.0 + speedDelta*120.0
+	maxGapPx := 320.0 + speedDelta*170.0
+	if maxGapPx < minGapPx+40 {
+		maxGapPx = minGapPx + 40
+	}
+
+	gapPx := minGapPx + g.rng.Float64()*(maxGapPx-minGapPx)
+	frames := int(gapPx / g.scrollSpeed)
+	if frames < 22 {
+		frames = 22
+	}
+	return frames
 }
 
 func (g *Game) Update() error {
@@ -105,10 +122,12 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) updatePlaying() {
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) && g.onGround {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) && g.onGround {
 		g.playerV = jumpVelocity
 		g.onGround = false
 	}
+
+	g.updateDifficulty()
 
 	g.playerV += gravity
 	g.playerY += g.playerV
@@ -147,6 +166,15 @@ func (g *Game) updatePlaying() {
 	g.score++
 }
 
+func (g *Game) updateDifficulty() {
+	// 経過時間（score）に応じて少しずつ加速。
+	targetSpeed := baseScrollSpeed + float64(g.score)*0.0008
+	if targetSpeed > maxScrollSpeed {
+		targetSpeed = maxScrollSpeed
+	}
+	g.scrollSpeed = targetSpeed
+}
+
 func (g *Game) collides() bool {
 	px := float64(playerX)
 	py := g.playerY
@@ -174,6 +202,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	text.Draw(screen, "@", basicfont.Face7x13, playerX+4, int(g.playerY)+16, color.White)
 
 	text.Draw(screen, fmt.Sprintf("Score: %d", g.score), basicfont.Face7x13, 12, 24, color.Black)
+	text.Draw(screen, fmt.Sprintf("Speed: %.2f", g.scrollSpeed), basicfont.Face7x13, 12, 42, color.Black)
 
 	switch g.state {
 	case stateTitle:
