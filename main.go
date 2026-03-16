@@ -28,8 +28,8 @@ const (
 	obstacleW = 16
 	obstacleH = 28
 
-	baseScrollSpeed = 4.0
-	maxScrollSpeed  = 11.0
+	baseScrollSpeed = 6.0
+	maxScrollSpeed  = 50.0
 )
 
 type gameState int
