@@ -3,9 +3,29 @@
 Go + Ebitengine で作った、最低限の「チャリ走風」2D 横スクロールランゲームです。  
 プレイヤー（`@`）は自動で進んでいるように見え、障害物（`#`）をジャンプで避け続けます。
 
-## 前提
-- Go 1.22 以上（推奨）
-- インターネット接続（初回の依存取得時に必要）
+![demo](./demo.gif)
+
+## 動作環境
+
+### 前提
+
+- Go 1.2x 以降
+- Ebitengine (Ebiten)
+- ※ここでは **Linux** の依存関係について説明します。
+
+### Linux での依存パッケージ
+
+Ebitengine は内部で GLFW や OpenGL, X11 を利用しているため、  
+Linux 上でビルド・実行するには、以下のネイティブライブラリ（開発用パッケージ）が必要になります。
+
+Ubuntu / WSL (Ubuntu) の場合:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+  libgl1-mesa-dev libxxf86vm-dev
+```
 
 ## 依存取得方法
 ```bash
